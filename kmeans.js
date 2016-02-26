@@ -3,8 +3,7 @@ let kutil = require("./kmeans.util.js"),
     kMean = require("./kmeans.cluster.js").kMean,
     compactness = require("./kmeans.compactness.js").compactness;
 
-let data = [[1, 2], [4, 12], [2, 3], [10, 4], [7, 64], [20, 74], [8, 12], [2, 13], [6, 50], [10, 3], [7, 19],
-    [3, 19], [50, 2], [10, 2], [3, 2], [5, 17], [9, 55], [5, 99], [50, 5], [4, 22], [73, 2], [10, 10], [4, 4]];
+let data = [[1,2], [4, 12], [2, 3], [10, 4], [7, 64], [8, 12], [2, 13], [6, 50], [10, 3], [7, 19], [20, 74],[3, 19], [50, 2], [10, 2], [3, 2], [5, 17], [9, 55], [5, 78], [50, 5], [4, 22], [73,2], [10, 10], [4, 4], [60,5], [65, 7], [55, 12], [15, 65], [60, 20], [5, 70]];
 let sampleB = 10;
 
 function randomPoints(data) {
@@ -40,12 +39,11 @@ function possibleVariabilities(dataset) {
 }
 
 function optimalK(gapArr, s) {
-    let stdDev = 0;
 
-    //return gapArr;
-    console.log(gapArr);
-    console.log(s);
-    return 0;
+    return gapArr.map((thisGap, k) => thisGap >= gapArr[k+1])
+        .findIndex((gapSize) => gapSize) + 1;
+
+
 }
 
 function findRefStdDevs(varis) {
@@ -61,22 +59,18 @@ function findRefStdDevs(varis) {
 
 function kMeansGap(data) {
     let referenceDataArr = generateDummyData(randomPoints(data), data.length, sampleB),
-        solutionVariabilities = possibleVariabilities(data),
+        solutionKMeans = kutil.genArr(parseInt((data.length / 3) - 1, 10))
+            .map((el, i) => kMean(data, i + 1)),
+        solutionVariabilities = solutionKMeans.map((el) => compactness(data, el)),
         solLogs = solutionVariabilities.map((el) => Math.log(el)),
+
         refVariabilities = referenceDataArr.map((refDataset) => possibleVariabilities(refDataset)),
         sumRefVariabilities = refVariabilities[0].map((el, kIndex) => refVariabilities.reduce((total, refVarByK) => total += refVarByK[kIndex], 0)),
-        //avgRefVariabilities = sumRefVariabilities.map((totalVar) => totalVar / sampleB),
-        logRefVaris = sumRefVariabilities.map((el) => Math.log(el)),
-        gaps = logRefVaris.map((refVari, index) => (refVari - solLogs[index])/sampleB);
+        logRefVaris = sumRefVariabilities.map((el) => el / sampleB).map((el) => Math.log(el)),
+        gaps = logRefVaris.map((refVari, index) => (refVari - solLogs[index])),
+        s = findRefStdDevs(refVariabilities);
 
-        //kMeansPoints = [],
-        //compactness = [],
-        // gaps = kutil.genArr(parseInt((data.length / 3) - 1, 10)).map((el, index) => calculateGap(data, index + 1));
-
-    return optimalK(gaps, findRefStdDevs(refVariabilities));
-    //return gaps;
+    return solutionKMeans[optimalK(gaps, s) - 1];
 }
 
-
-//console.log(calculateGap(data, 3));
 console.log((kMeansGap(data)));
