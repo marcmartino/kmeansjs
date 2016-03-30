@@ -1,5 +1,7 @@
+const assert = require('assert');
+
 var xys = [{"x":[1,6],"y":7},{"x":[2,4],"y":8},{"x":[3,7],"y":16},{"x":[6,8],"y":44},{"x":[7,1],"y":50},{"x":[8,4],"y":68}];
-var euDist = (pt1, pt2) => Math.sqrt(Math.pow(pt1[0] - pt2[0], 2) + Math.pow(pt1[1] - pt2[1], 2));
+var euSqDist = (pt1, pt2) => Math.pow(pt1[0] - pt2[0], 2) + Math.pow(pt1[1] - pt2[1], 2);
 var manDist = (pt1, pt2) => pt1[0] - pt2[0] + pt1[1] - pt2[1];
 var genArr = function (len) {
     return Array.apply(null, Array(len)).map(function () {
@@ -10,7 +12,7 @@ var pluck = (prop) => (el) => el[prop];
 function kNN(data) {
     "use strict";
     return function (pt, k, distFunc) {
-        var usingDistFunc = distFunc || euDist;
+        var usingDistFunc = distFunc || euSqDist;
 
         return data.reduce(nearestElements(pt,k, usingDistFunc), [])
             .map(pluck('y')).reduce((total, val) => total + (val/k), 0);
@@ -55,7 +57,7 @@ function findMinIndex(pt, testMinPt, distFunc) {
 
 var knnFunc = kNN(xys);
 
-console.log(knnFunc([4,2], 1));
-console.log(knnFunc([4,2], 1, manDist));
-console.log(knnFunc([4,2], 3));
-console.log(knnFunc([4,2], 3, manDist));
+assert.equal(knnFunc([4,2], 1), 8);
+assert.equal(knnFunc([4,2], 1, manDist), 44);
+assert.equal(knnFunc([4,2], 3), 42);
+assert(knnFunc([4,2], 3, manDist) > 39.6 && knnFunc([4,2], 3, manDist) < 39.7);
